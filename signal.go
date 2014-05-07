@@ -1,20 +1,20 @@
 package gosignal
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
-    "fmt"
 )
 
-
 type SignalHandlerFunc func(os.Signal)
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 // SignalHandler
 ///////////////////////////////////////////////////////////////////////////////////////////
 type SignalHandler struct {
-	intChan      chan os.Signal
-	addChan      chan SignalHandlerFunc
-	intCbs      []SignalHandlerFunc
+	intChan chan os.Signal
+	addChan chan SignalHandlerFunc
+	intCbs  []SignalHandlerFunc
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -29,7 +29,7 @@ func (s *SignalHandler) AddHandler(handler SignalHandlerFunc) {
 ///////////////////////////////////////////////////////////////////////////////////////////
 func (s *SignalHandler) maintainLoop() {
 	signal.Notify(s.intChan, os.Interrupt)
-    
+
 	for {
 		select {
 		case signal := <-s.intChan:
