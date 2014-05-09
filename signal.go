@@ -1,7 +1,7 @@
 package gosignal
 
 import (
-	"fmt"
+	"github.com/denkhaus/go-promise"
 	"os"
 	"os/signal"
 )
@@ -13,15 +13,7 @@ type SignalHandlerFunc func(os.Signal)
 ///////////////////////////////////////////////////////////////////////////////////////////
 type SignalHandler struct {
 	intChan chan os.Signal
-	addChan chan SignalHandlerFunc
-	intCbs  []SignalHandlerFunc
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// AddHandler
-///////////////////////////////////////////////////////////////////////////////////////////
-func (s *SignalHandler) AddHandler(handler SignalHandlerFunc) {
-	s.addChan <- handler
+	pr      *promise.Promise
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -33,13 +25,7 @@ func (s *SignalHandler) maintainLoop() {
 	for {
 		select {
 		case signal := <-s.intChan:
-			fmt.Println("Received SIGINT (Ctrl+C).  Shutting down...")
-			for _, callback := range s.intCbs {
-				callback(signal)
-			}
-
-		case handler := <-s.addChan:
-			s.intCbs = append(s.intCbs, handler)
+			s.pr.Resolve(signal)
 		}
 	}
 }
@@ -47,12 +33,12 @@ func (s *SignalHandler) maintainLoop() {
 ///////////////////////////////////////////////////////////////////////////////////////////
 // NewSignalHandler
 ///////////////////////////////////////////////////////////////////////////////////////////
-func NewSignalHandler() *SignalHandler {
+func ObserveInterrupt() *promise.Deferred {
 
 	h := &SignalHandler{}
 	h.intChan = make(chan os.Signal, 1)
-	h.addChan = make(chan SignalHandlerFunc)
+	h.pr = promise.Q().Defer()
 
 	go h.maintainLoop()
-	return h
+	return h.pr
 }
