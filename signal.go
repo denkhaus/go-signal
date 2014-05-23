@@ -1,7 +1,7 @@
 package gosignal
 
 import (
-	"github.com/denkhaus/go-promise"
+	"github.com/denkhaus/go-q"
 	"os"
 	"os/signal"
 )
